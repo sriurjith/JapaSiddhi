@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "89483752433",
+    "project_id": "japa-siddhi-a1626",
+    "storage_bucket": "japa-siddhi-a1626.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:89483752433:android:9940263134031f7e9b8a50",
+        "android_client_info": {
+          "package_name": "com.japasiddhi"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBzWD3bquU98BRHwcozGfmzOuBKuTQH35c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
