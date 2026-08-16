@@ -1,6 +1,6 @@
 const IS_PRODUCTION = !__DEV__;
 
-const DEV_API_URL = 'https://japasiddhi.onrender.com/api/v1';
+const DEV_API_URL = 'http://127.0.0.1:5000/api/v1';
 const PROD_API_URL = 'https://japasiddhi.onrender.com/api/v1';
 
 const ENV = {
