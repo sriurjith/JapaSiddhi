@@ -4,6 +4,9 @@
   "description": "Japa Siddhi Backend API",
   "main": "dist/server.js",
   "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "nodemon",
     "build": "tsc && node -e \"require('fs').mkdirSync('dist/database',{recursive:true}); require('fs').copyFileSync('src/database/schema.sqlite.sql','dist/database/schema.sqlite.sql')\"",

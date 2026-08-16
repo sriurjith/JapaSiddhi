@@ -30,7 +30,8 @@ const ENV = {
 
   WEBSITE: 'https://japasiddhi.com',
 
-  PRIVACY_POLICY_URL: 'https://japasiddhi.com/privacy',
+  PRIVACY_POLICY_URL:
+    'https://sriurjith.github.io/JapaSiddhi/privacy.html',
 
   DEFAULT_LANGUAGE: 'en',
 

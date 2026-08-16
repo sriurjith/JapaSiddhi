@@ -1,0 +1,24 @@
+name: Backend build
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - JapaSiddhi-Backend/**
+      - .github/workflows/backend.yml
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: JapaSiddhi-Backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: JapaSiddhi-Backend/package-lock.json
+      - run: npm ci
+      - run: npm run build

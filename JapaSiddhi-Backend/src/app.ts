@@ -24,6 +24,7 @@ import mantraRoutes from './modules/mantra/mantra.routes';
 import database from './database/mysql';
 const app = express();
 
+app.set('trust proxy', 1);
 
 app.use(cors());
 
