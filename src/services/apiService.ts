@@ -5,7 +5,7 @@ import {resetToLogin} from '../navigation/navigationRef';
 
 const apiService = axios.create({
   baseURL: ENV.API_URL,
-  timeout: 30000,
+  timeout: ENV.TIMEOUT,
   headers: {
     'Content-Type': 'application/json',
   },

@@ -68,9 +68,15 @@ const LoginScreen = () => {
         sentTo: response.data?.data?.sentTo,
       });
     } catch (error: any) {
+      const timedOut =
+        error?.code === 'ECONNABORTED' ||
+        String(error?.message || '').toLowerCase().includes('timeout');
       Alert.alert(
         'OTP Failed',
-        error?.response?.data?.message || 'Unable to send OTP.',
+        error?.response?.data?.message ||
+          (timedOut
+            ? 'The server is waking up. Wait 10 seconds and tap Continue again.'
+            : 'Unable to send OTP.'),
       );
     } finally {
       setSubmitting(false);
