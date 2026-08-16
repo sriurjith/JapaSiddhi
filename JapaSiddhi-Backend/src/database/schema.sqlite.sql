@@ -451,7 +451,7 @@ VALUES
 
 INSERT OR IGNORE INTO app_settings (setting_key, setting_value, setting_type, category, description) VALUES
 ('trust_name', 'Bilva Patra Trust', 'TEXT', 'TRUST', 'Trust Name'),
-('support_email', 'support@japasiddhi.com', 'EMAIL', 'TRUST', 'Support Email'),
+('support_email', 'kailaasavaasi@gmail.com', 'EMAIL', 'TRUST', 'Support Email'),
 ('support_phone', '9999999999', 'PHONE', 'TRUST', 'Support Phone'),
 ('monthly_donation_amount', '200', 'NUMBER', 'DONATION', 'Monthly Donation Amount'),
 ('upi_id', 'bilvapatra@upi', 'TEXT', 'DONATION', 'UPI ID'),

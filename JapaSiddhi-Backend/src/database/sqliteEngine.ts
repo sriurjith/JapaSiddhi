@@ -82,6 +82,13 @@ class SqliteEngine {
       AND setting_value IN ('123456789012', 'SBIN0001234')
       `,
     );
+    this.db.run(
+      `
+      UPDATE app_settings
+      SET setting_value = 'kailaasavaasi@gmail.com'
+      WHERE setting_key = 'support_email'
+      `,
+    );
     this.persist();
   }
 

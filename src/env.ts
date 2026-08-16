@@ -24,7 +24,7 @@ const ENV = {
 
   APPSTORE_URL: '',
 
-  SUPPORT_EMAIL: 'support@japasiddhi.com',
+  SUPPORT_EMAIL: 'kailaasavaasi@gmail.com',
 
   SUPPORT_PHONE: '',
 
