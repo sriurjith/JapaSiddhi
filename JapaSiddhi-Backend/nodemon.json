@@ -7,5 +7,5 @@
     "dist",
     "node_modules"
   ],
-  "exec": "ts-node ./src/server.ts"
+  "exec": "ts-node --files ./src/server.ts"
 }

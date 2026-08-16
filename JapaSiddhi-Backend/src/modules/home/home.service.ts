@@ -10,7 +10,108 @@ import {
 class HomeService {
 
 
+  getFallbackHome(): HomeResponse {
+    return {
+      banner: {
+        image: null,
+        title: 'Welcome to Japa Siddhi',
+        description:
+          'Begin your spiritual journey with daily mantra chanting and devotion.',
+        action: 'CHANT',
+      },
+      japaIntroduction: {
+        title: 'What is Japa?',
+        description:
+          'Japa is the practice of repeating a sacred mantra with devotion and focus.',
+        howItWorks: [
+          'Select your preferred mantra',
+          'Create a Japa Goal',
+          'Complete your daily chanting target',
+        ],
+      },
+      globalJapaCount: {
+        totalJapaCount: 0,
+        userJapaCount: 0,
+      },
+      featuredMantras: [],
+      myProjects: [],
+      todayProgress: {
+        todayCount: 0,
+        completedProjects: 0,
+        totalActiveProjects: 0,
+      },
+      upcomingFestival: null,
+      quickActions: [
+        {
+          id: 'chant',
+          title: 'Japa Chanting',
+          description: 'Community, private, and challenge japa',
+          icon: 'om',
+          actionType: 'SCREEN',
+          actionValue: 'CHANT',
+          displayOrder: 1,
+        },
+        {
+          id: 'baanalingam',
+          title: 'Baanalingam',
+          description: 'Apply for Baanalingam distribution',
+          icon: 'banalingam',
+          actionType: 'SCREEN',
+          actionValue: 'BAANALINGAM',
+          displayOrder: 2,
+        },
+        {
+          id: 'donate',
+          title: 'Annadanam',
+          description: 'Sponsor food seva and donations',
+          icon: 'donation',
+          actionType: 'SCREEN',
+          actionValue: 'DONATE',
+          displayOrder: 3,
+        },
+        {
+          id: 'homam',
+          title: 'Nithya Homam',
+          description: 'Enroll for daily homam',
+          icon: 'festivals',
+          actionType: 'SCREEN',
+          actionValue: 'NITHYA_HOMAM',
+          displayOrder: 4,
+        },
+        {
+          id: 'orders',
+          title: 'Orders & Tracking',
+          description: 'Track mala, gifts, and Baanalingam',
+          icon: 'store',
+          actionType: 'SCREEN',
+          actionValue: 'ORDERS',
+          displayOrder: 5,
+        },
+        {
+          id: 'care',
+          title: 'Customer Care',
+          description: 'Tickets, WhatsApp, and FAQ',
+          icon: 'customer_care',
+          actionType: 'SCREEN',
+          actionValue: 'CUSTOMER_CARE',
+          displayOrder: 6,
+        },
+      ],
+    };
+  }
+
   async getHome(
+    userId: number,
+  ): Promise<HomeResponse> {
+    try {
+      return await this.getHomeFromDatabase(userId);
+    } catch (error) {
+      console.warn('Home database unavailable, using Node fallback data.');
+      return this.getFallbackHome();
+    }
+  }
+
+  private async getHomeFromDatabase(
     userId: number,
   ): Promise<HomeResponse> {
 
@@ -20,7 +121,7 @@ class HomeService {
 
 
     const globalJapaCount =
-      await homeRepository.getGlobalJapaCount();
+      await homeRepository.getGlobalJapaCount(userId);
 
 
     const featuredMantras =
@@ -71,123 +172,7 @@ class HomeService {
 
 
 
-    const quickActions: HomeQuickAction[] = [
-
-      {
-        id: 'chant',
-
-        title:
-          'Chant Japa',
-
-        description:
-          'Repeat mantras and track your chanting journey',
-
-        icon:
-          'om',
-
-        actionType:
-          'SCREEN',
-
-        actionValue:
-          'CHANT',
-
-        displayOrder:
-          1,
-      },
-
-
-      {
-        id: 'goals',
-
-        title:
-          'Japa Goals',
-
-        description:
-          'Create and complete your personal japa goals',
-
-        icon:
-          'target',
-
-        actionType:
-          'SCREEN',
-
-        actionValue:
-          'JAPA_GOALS',
-
-        displayOrder:
-          2,
-      },
-
-
-      {
-        id: 'family',
-
-        title:
-          'Family Japa',
-
-        description:
-          'Chant together with your family members',
-
-        icon:
-          'family',
-
-        actionType:
-          'SCREEN',
-
-        actionValue:
-          'FAMILY_JAPA',
-
-        displayOrder:
-          3,
-      },
-
-
-      {
-        id: 'donate',
-
-        title:
-          'Donate',
-
-        description:
-          'Support Bilva Patra Trust',
-
-        icon:
-          'donation',
-
-        actionType:
-          'SCREEN',
-
-        actionValue:
-          'DONATE',
-
-        displayOrder:
-          4,
-      },
-
-
-      {
-        id: 'festival',
-
-        title:
-          'Festivals',
-
-        description:
-          'View upcoming spiritual events',
-
-        icon:
-          'calendar',
-
-        actionType:
-          'SCREEN',
-
-        actionValue:
-          'FESTIVALS',
-
-        displayOrder:
-          5,
-      },
-
-    ];
+    const quickActions: HomeQuickAction[] = this.getFallbackHome().quickActions;
 
 
 

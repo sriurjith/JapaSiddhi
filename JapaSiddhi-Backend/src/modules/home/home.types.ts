@@ -19,6 +19,7 @@ export interface JapaIntroduction {
 
 export interface GlobalJapaCount {
   totalJapaCount: number;
+  userJapaCount: number;
 }
 
 

@@ -9,6 +9,84 @@ export const loginValidation = [
     .withMessage('Firebase token is required.'),
 ];
 
+export const phoneAuthValidation = [
+  body('mobileCountryCode')
+    .trim()
+    .notEmpty()
+    .withMessage('Country code is required.'),
+  body('mobileNumber')
+    .trim()
+    .notEmpty()
+    .isLength({min: 6, max: 15})
+    .withMessage('Enter a valid mobile number.'),
+  body('email')
+    .trim()
+    .notEmpty()
+    .withMessage('Email is required.')
+    .isEmail()
+    .withMessage('Enter a valid email address.'),
+];
+
+export const otpSendValidation = [
+  body('mobileCountryCode')
+    .trim()
+    .notEmpty()
+    .withMessage('Country code is required.'),
+  body('mobileNumber')
+    .trim()
+    .notEmpty()
+    .isLength({min: 6, max: 15})
+    .withMessage('Enter a valid mobile number.'),
+  body('email')
+    .optional({nullable: true, checkFalsy: true})
+    .trim()
+    .isEmail()
+    .withMessage('Enter a valid email address.'),
+];
+
+export const otpVerifyValidation = [
+  ...otpSendValidation,
+  body('otp')
+    .trim()
+    .isLength({min: 6, max: 6})
+    .withMessage('Enter the 6-digit OTP.'),
+];
+
+export const registerValidation = [
+  ...phoneAuthValidation,
+  body('fullName')
+    .trim()
+    .notEmpty()
+    .withMessage('Full name is required.')
+    .isLength({min: 3, max: 100})
+    .withMessage('Full name must be between 3 and 100 characters.'),
+  body('gender')
+    .notEmpty()
+    .withMessage('Gender is required.')
+    .isIn(['Male', 'Female', 'Other', 'Prefer Not To Say'])
+    .withMessage('Invalid gender.'),
+  body('dateOfBirth')
+    .custom((_, {req}) => Boolean(req.body.dateOfBirth || req.body.dob))
+    .withMessage('Date of birth is required.'),
+  body('countryId')
+    .notEmpty()
+    .withMessage('Country is required.')
+    .isInt({min: 1})
+    .withMessage('Invalid country.'),
+  body('preferredLanguageId')
+    .custom((_, {req}) =>
+      Number(req.body.preferredLanguageId || req.body.languageId) > 0,
+    )
+    .withMessage('Preferred language is required.'),
+  body('address').optional({nullable: true}),
+  body('maritalStatus')
+    .optional({nullable: true})
+    .isIn(['Bachelor', 'Married'])
+    .withMessage('Invalid marital status.'),
+  body('gothram').optional({nullable: true}),
+  body('nakshatram').optional({nullable: true}),
+];
+
 export const completeProfileValidation = [
   body('fullName')
     .trim()
@@ -18,21 +96,21 @@ export const completeProfileValidation = [
     .withMessage('Full name must be between 3 and 100 characters.'),
 
   body('email')
-    .optional({ nullable: true, checkFalsy: true })
+    .trim()
+    .notEmpty()
+    .withMessage('Email is required.')
     .isEmail()
     .withMessage('Please enter a valid email address.'),
 
   body('gender')
     .notEmpty()
     .withMessage('Gender is required.')
-    .isIn(['Male', 'Female', 'Other'])
+    .isIn(['Male', 'Female', 'Other', 'Prefer Not To Say'])
     .withMessage('Invalid gender.'),
 
   body('dateOfBirth')
-    .notEmpty()
-    .withMessage('Date of birth is required.')
-    .isISO8601()
-    .withMessage('Invalid date of birth.'),
+    .custom((_, {req}) => Boolean(req.body.dateOfBirth || req.body.dob))
+    .withMessage('Date of birth is required.'),
 
   body('countryId')
     .notEmpty()
@@ -51,10 +129,10 @@ export const completeProfileValidation = [
     .withMessage('Invalid city.'),
 
   body('preferredLanguageId')
-    .notEmpty()
-    .withMessage('Preferred language is required.')
-    .isInt({ min: 1 })
-    .withMessage('Invalid language.'),
+    .custom((_, {req}) =>
+      Number(req.body.preferredLanguageId || req.body.languageId) > 0,
+    )
+    .withMessage('Preferred language is required.'),
 
   body('timezone')
     .optional({ nullable: true })

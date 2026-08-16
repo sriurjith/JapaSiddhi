@@ -38,8 +38,8 @@ const homeSlice = createSlice({
         return;
       }
 
-      state.homeData.globalJapaCount.totalCount =
-        action.payload;
+      state.homeData.globalJapaCount.userCount = action.payload;
+      state.homeData.globalJapaCount.totalCount = action.payload;
     },
   },
 

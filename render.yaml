@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: japasiddhi-api
+    runtime: node
+    rootDir: JapaSiddhi-Backend
+    plan: starter
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/v1/health
+    disk:
+      name: japasiddhi-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DB_ENGINE
+        value: sqlite
+      - key: SQLITE_PATH
+        value: /var/data/japa_siddhi.sqlite
+      - key: JWT_SECRET
+        generateValue: true
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: 587

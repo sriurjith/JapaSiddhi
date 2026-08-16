@@ -42,7 +42,7 @@ const QuickActionCard: React.FC<Props> = ({
       return { uri: item.image };
     }
 
-    return localImages[item.icon];
+    return localImages[item.icon] || localImages.japa;
   }, [item]);
 
   return (

@@ -24,6 +24,8 @@ export interface GlobalJapaCount {
 
   totalCount: number;
 
+  userCount: number;
+
 }
 
 

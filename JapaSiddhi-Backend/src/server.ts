@@ -17,7 +17,7 @@ const server = http.createServer(app);
 // Initialize Socket.IO
 initializeSocket(server);
 
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
     console.log('========================================');
     console.log(`🚀 Japa Siddhi Backend Started`);
     console.log(`🌐 Port : ${PORT}`);

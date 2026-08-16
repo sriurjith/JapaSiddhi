@@ -14,12 +14,11 @@ class HomeController {
     next: NextFunction,
   ) {
     try {
-      /**
-       * TEMPORARY DEVELOPMENT MODE
-       * Authentication is disabled, so use a fixed user ID.
-       * Restore req.user?.id when login is enabled again.
-       */
-      const userId = 1;
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return apiResponse.error(res, 'User not authenticated', 401);
+      }
 
       const data = await homeService.getHome(userId);
 

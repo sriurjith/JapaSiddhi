@@ -24,6 +24,9 @@ import LanguageSelector from './components/LanguageSelector';
 import ContinueButton from './components/ContinueButton';
 
 import {CountryItem} from '../../constants/countries';
+import {DEFAULT_LANGUAGE, Language} from '../../constants/languages';
+import ProfileApi, {CompleteProfileRequest} from './services/profileApi';
+import {hydrateSession, saveSession} from '../../services/session';
 
 interface StateModel {
   id: number;
@@ -35,18 +38,21 @@ interface CityModel {
   name: string;
 }
 
-interface Language {
-  id: number;
-  code: string;
-  name: string;
-  nativeName: string;
-}
 
 const CompleteProfileScreen = ({
   navigation,
   route,
 }: any) => {
   const phoneNumber = route?.params?.phoneNumber ?? '';
+  const registeredEmail = route?.params?.email ?? '';
+  const mobileCountryCode = String(route?.params?.mobileCountryCode || '').replace(
+    /\D/g,
+    '',
+  );
+  const mobileNumber = String(route?.params?.mobileNumber || '').replace(
+    /\D/g,
+    '',
+  );
 
   const [loading, setLoading] = useState(false);
 
@@ -55,7 +61,7 @@ const CompleteProfileScreen = ({
 
   const [fullName, setFullName] = useState('');
 
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(registeredEmail);
 
   const [gender, setGender] = useState('');
 
@@ -74,7 +80,18 @@ const CompleteProfileScreen = ({
     useState<CityModel | null>(null);
 
   const [language, setLanguage] =
-    useState<Language | null>(null);
+    useState<Language | null>(DEFAULT_LANGUAGE);
+
+  const [address, setAddress] = useState('');
+  const [maritalStatus, setMaritalStatus] =
+    useState<'Bachelor' | 'Married'>('Bachelor');
+  const [spouseName, setSpouseName] = useState('');
+  const [spouseDob, setSpouseDob] = useState(new Date());
+  const [anniversaryDate, setAnniversaryDate] = useState(new Date());
+  const [showSpouseDobPicker, setShowSpouseDobPicker] = useState(false);
+  const [showAnniversaryPicker, setShowAnniversaryPicker] = useState(false);
+  const [gothram, setGothram] = useState('');
+  const [nakshatram, setNakshatram] = useState('');
 
   const [acceptedTerms, setAcceptedTerms] =
     useState(false);
@@ -89,11 +106,7 @@ const CompleteProfileScreen = ({
   }, [fullName]);
 
   const isEmailValid = useMemo(() => {
-    if (email.trim() === '') {
-      return true;
-    }
-
-    return emailRegex.test(email);
+    return emailRegex.test(email.trim());
   }, [email]);
 
   const isDOBValid = useMemo(() => {
@@ -145,25 +158,83 @@ const CompleteProfileScreen = ({
     isFormValid,
   });
 
-  if (!isFormValid) {
-    Alert.alert(
-      'Validation',
-      JSON.stringify({
-        isNameValid,
-        isEmailValid,
-        isDOBValid,
-        gender,
-        country: country !== null,
-        stateModel: stateModel !== null,
-        acceptedTerms,
-      }),
-    );
+  if (!isFormValid || !address.trim()) {
+    Alert.alert('Validation', 'Please fill all required signup fields.');
     return;
   }
 
-  console.log('Going to Home');
+  if (maritalStatus === 'Married' && spouseName.trim().length < 3) {
+    Alert.alert('Validation', 'Spouse name is required for married devotees.');
+    return;
+  }
 
-navigation.navigate('Home');
+    setLoading(true);
+    try {
+      const countries = await ProfileApi.getCountries();
+      const matchedCountry = countries?.find(
+        (item: {isoCode?: string; code?: string}) =>
+          item.isoCode === country?.code || item.code === country?.code,
+      );
+
+      const profilePayload: CompleteProfileRequest = {
+        fullName: fullName.trim(),
+        email: email.trim(),
+        phoneNumber,
+        gender: gender as CompleteProfileRequest['gender'],
+        dob: dob.toISOString().slice(0, 10),
+        countryId: Number(matchedCountry?.id) || 1,
+        stateId: Number(stateModel?.id) || 0,
+        cityId: Number(cityModel?.id) || 0,
+        languageId: Number(language?.id || DEFAULT_LANGUAGE.id || 1),
+        address: address.trim(),
+        maritalStatus,
+        spouseName: maritalStatus === 'Married' ? spouseName.trim() : undefined,
+        spouseDob:
+          maritalStatus === 'Married'
+            ? spouseDob.toISOString().slice(0, 10)
+            : undefined,
+        anniversaryDate:
+          maritalStatus === 'Married'
+            ? anniversaryDate.toISOString().slice(0, 10)
+            : undefined,
+        gothram: gothram.trim() || undefined,
+        nakshatram: nakshatram.trim() || undefined,
+        profileImage,
+      };
+
+      const session = await hydrateSession();
+      if (session.token) {
+        await ProfileApi.completeProfile(profilePayload);
+      } else {
+        const countryCode =
+          mobileCountryCode ||
+          String(phoneNumber).slice(0, Math.max(String(phoneNumber).length - 10, 1));
+        const number =
+          mobileNumber || String(phoneNumber).slice(-10);
+
+        const result = await ProfileApi.register({
+          ...profilePayload,
+          mobileCountryCode: countryCode,
+          mobileNumber: number,
+        });
+        const token = result?.data?.token;
+        const user = result?.data?.user;
+        if (!token) {
+          throw new Error('Registration token was not created.');
+        }
+        await saveSession(token, user);
+      }
+
+      navigation.replace('Home');
+    } catch (error: any) {
+      Alert.alert(
+        'Registration',
+        error?.response?.data?.message ||
+          'Could not complete registration. Please try again.',
+      );
+    } finally {
+      setLoading(false);
+    }
 };
   return (
     <SafeAreaView style={styles.container}>
@@ -195,11 +266,11 @@ navigation.navigate('Home');
         </TouchableOpacity>
 
         <Text style={styles.heading}>
-          Complete Your Profile
+          Signup
         </Text>
 
         <Text style={styles.subHeading}>
-          Please provide your details.
+          Personal, marital, and spiritual details as per Japa Siddhi.
         </Text>
 
         <Text style={styles.label}>
@@ -226,7 +297,7 @@ navigation.navigate('Home');
         )}
 
         <Text style={styles.label}>
-          Email Address
+          Email Address *
         </Text>
 
         <TextInput
@@ -385,6 +456,100 @@ navigation.navigate('Home');
         />
 
         <Text style={styles.label}>
+          Address *
+        </Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter Address"
+          value={address}
+          onChangeText={setAddress}
+        />
+
+        <Text style={styles.label}>
+          Marital Status *
+        </Text>
+        <View style={styles.pickerContainer}>
+          <Picker
+            selectedValue={maritalStatus}
+            onValueChange={value =>
+              setMaritalStatus(value as 'Bachelor' | 'Married')
+            }>
+            <Picker.Item label="Bachelor" value="Bachelor" />
+            <Picker.Item label="Married" value="Married" />
+          </Picker>
+        </View>
+
+        {maritalStatus === 'Married' ? (
+          <>
+            <Text style={styles.label}>Spouse Name *</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter Spouse Name"
+              value={spouseName}
+              onChangeText={setSpouseName}
+            />
+
+            <Text style={styles.label}>Spouse Date of Birth *</Text>
+            <TouchableOpacity
+              style={styles.input}
+              onPress={() => setShowSpouseDobPicker(true)}>
+              <Text style={styles.dateText}>{spouseDob.toDateString()}</Text>
+            </TouchableOpacity>
+            {showSpouseDobPicker ? (
+              <DateTimePicker
+                value={spouseDob}
+                mode="date"
+                maximumDate={new Date()}
+                onChange={(_, selectedDate) => {
+                  setShowSpouseDobPicker(false);
+                  if (selectedDate) {
+                    setSpouseDob(selectedDate);
+                  }
+                }}
+              />
+            ) : null}
+
+            <Text style={styles.label}>Anniversary Date *</Text>
+            <TouchableOpacity
+              style={styles.input}
+              onPress={() => setShowAnniversaryPicker(true)}>
+              <Text style={styles.dateText}>
+                {anniversaryDate.toDateString()}
+              </Text>
+            </TouchableOpacity>
+            {showAnniversaryPicker ? (
+              <DateTimePicker
+                value={anniversaryDate}
+                mode="date"
+                maximumDate={new Date()}
+                onChange={(_, selectedDate) => {
+                  setShowAnniversaryPicker(false);
+                  if (selectedDate) {
+                    setAnniversaryDate(selectedDate);
+                  }
+                }}
+              />
+            ) : null}
+          </>
+        ) : null}
+
+        <Text style={styles.label}>Gothram (Optional)</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter Gothram"
+          value={gothram}
+          onChangeText={setGothram}
+        />
+
+        <Text style={styles.label}>Nakshatram (Optional)</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter Nakshatram"
+          value={nakshatram}
+          onChangeText={setNakshatram}
+        />
+
+        <Text style={styles.label}>
           Preferred Language 
         </Text>
 
@@ -395,35 +560,29 @@ navigation.navigate('Home');
 }}
         />
 
-        <TouchableOpacity
-          style={styles.termsContainer}
-          onPress={() =>
-            setAcceptedTerms(
-              !acceptedTerms,
-            )
-          }>
-
-          <View
-            style={[
-              styles.checkbox,
-              acceptedTerms &&
-                styles.checkboxSelected,
-            ]}>
-
-            {acceptedTerms && (
-              <Text style={styles.checkMark}>
-                ✓
-              </Text>
-            )}
-
-          </View>
+        <View style={styles.termsContainer}>
+          <TouchableOpacity
+            onPress={() => setAcceptedTerms(!acceptedTerms)}>
+            <View
+              style={[
+                styles.checkbox,
+                acceptedTerms && styles.checkboxSelected,
+              ]}>
+              {acceptedTerms && (
+                <Text style={styles.checkMark}>✓</Text>
+              )}
+            </View>
+          </TouchableOpacity>
 
           <Text style={styles.termsText}>
-            I agree to the Terms of
-            Service and Privacy Policy
+            I agree to the Terms of Service and{' '}
+            <Text
+              style={styles.privacyLink}
+              onPress={() => navigation.navigate('PrivacyPolicy')}>
+              Privacy Policy
+            </Text>
           </Text>
-
-        </TouchableOpacity>
+        </View>
 
         {loading ? (
 
@@ -588,6 +747,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.textPrimary,
     lineHeight: 22,
+  },
+
+  privacyLink: {
+    color: Colors.primary,
+    fontWeight: '700',
   },
 
   bottomSpacing: {

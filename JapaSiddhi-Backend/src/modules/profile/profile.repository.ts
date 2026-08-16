@@ -60,6 +60,20 @@ class ProfileRepository {
 
           u.profile_photo AS profilePhoto,
 
+          u.address,
+
+          u.marital_status AS maritalStatus,
+
+          u.spouse_name AS spouseName,
+
+          u.spouse_dob AS spouseDob,
+
+          u.anniversary_date AS anniversaryDate,
+
+          u.gothram,
+
+          u.nakshatram,
+
           u.profile_completed AS profileCompleted,
 
           u.role

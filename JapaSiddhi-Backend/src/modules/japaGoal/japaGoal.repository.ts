@@ -81,6 +81,41 @@ class JapaGoalRepository {
 
 
 
+  async findOrCreateActiveGoal(
+    userId: number,
+    mantraId?: number | null,
+  ): Promise<number> {
+    const rows = await mysql.query<any[]>(
+      `
+      SELECT id
+      FROM japa_goals
+      WHERE user_id = ?
+      AND status = 'ACTIVE'
+      ORDER BY created_at DESC
+      LIMIT 1
+      `,
+      [userId],
+    );
+
+    if (rows.length) {
+      return Number(rows[0].id);
+    }
+
+    return this.createGoal({
+      userId,
+      mantraType: 'DEFAULT',
+      mantraId: mantraId ?? 1,
+      personalMantraId: null,
+      goalName: 'Daily Japa',
+      targetCount: 10800,
+      remainingCount: 10800,
+      dailyTarget: 108,
+      startDate: new Date().toISOString().slice(0, 10),
+      endDate: '2026-12-31',
+      notes: 'Personal sadhana',
+    });
+  }
+
   async getUserGoals(
     userId: number,
   ) {
@@ -107,9 +142,24 @@ class JapaGoalRepository {
 
         j.target_count AS targetCount,
 
-        j.completed_count AS completedCount,
+        COALESCE((
+          SELECT SUM(js.session_count)
+          FROM japa_sessions js
+          WHERE js.japa_goal_id = j.id
+        ), 0) AS completedCount,
 
-        j.remaining_count AS remainingCount,
+        CASE
+          WHEN j.target_count - COALESCE((
+            SELECT SUM(js.session_count)
+            FROM japa_sessions js
+            WHERE js.japa_goal_id = j.id
+          ), 0) < 0 THEN 0
+          ELSE j.target_count - COALESCE((
+            SELECT SUM(js.session_count)
+            FROM japa_sessions js
+            WHERE js.japa_goal_id = j.id
+          ), 0)
+        END AS remainingCount,
 
         j.daily_target AS dailyTarget,
 

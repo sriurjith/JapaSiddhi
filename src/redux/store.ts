@@ -8,6 +8,13 @@ export const store = configureStore({
     auth: authReducer,
     home: homeReducer,
   },
+  middleware: getDefaultMiddleware =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: ['auth/sendOTP/fulfilled'],
+        ignoredPaths: ['auth.confirmation'],
+      },
+    }),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

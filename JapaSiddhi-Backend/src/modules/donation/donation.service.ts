@@ -106,6 +106,20 @@ class DonationService {
       await donationRepository.getPaymentSettings();
 
 
+    const placeholderValues = new Set([
+      '123456789012',
+      'SBIN0001234',
+      '9999999999',
+    ]);
+
+    const realValue = (value?: string | null) => {
+      const trimmed = String(value || '').trim();
+      if (!trimmed || placeholderValues.has(trimmed)) {
+        return null;
+      }
+      return trimmed;
+    };
+
     const details: any = {
 
       upiId: null,
@@ -134,39 +148,39 @@ class DonationService {
       switch(item.setting_key) {
 
         case 'upi_id':
-          details.upiId = item.setting_value;
+          details.upiId = realValue(item.setting_value);
           break;
 
         case 'google_pay_number':
-          details.googlePayNumber = item.setting_value;
+          details.googlePayNumber = realValue(item.setting_value);
           break;
 
         case 'phonepe_number':
-          details.phonePeNumber = item.setting_value;
+          details.phonePeNumber = realValue(item.setting_value);
           break;
 
         case 'paytm_number':
-          details.paytmNumber = item.setting_value;
+          details.paytmNumber = realValue(item.setting_value);
           break;
 
         case 'donation_qr_code':
-          details.qrCode = item.setting_value;
+          details.qrCode = realValue(item.setting_value);
           break;
 
         case 'bank_name':
-          details.bankName = item.setting_value;
+          details.bankName = realValue(item.setting_value);
           break;
 
         case 'account_holder_name':
-          details.accountHolderName = item.setting_value;
+          details.accountHolderName = realValue(item.setting_value);
           break;
 
         case 'account_number':
-          details.accountNumber = item.setting_value;
+          details.accountNumber = realValue(item.setting_value);
           break;
 
         case 'ifsc_code':
-          details.ifscCode = item.setting_value;
+          details.ifscCode = realValue(item.setting_value);
           break;
 
       }

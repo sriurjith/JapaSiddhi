@@ -1,37 +1,77 @@
-import pool from './pool';
+import sqliteEngine from './sqliteEngine';
+import mysqlPool from './pool';
+import environment from '../config/environment';
 
-class MySQL {
- async query<T = any>(
-  sql: string,
-  params: any[] = [],
-): Promise<T> {
+type EngineName = 'mysql' | 'sqlite';
 
-  const [rows] = await pool.execute(
-    sql,
-    params,
-  );
+class DatabaseFacade {
+  private engine: EngineName | null = null;
+  private ready: Promise<EngineName> | null = null;
 
-  return rows as T;
+  getEngineName(): EngineName | null {
+    return this.engine;
+  }
 
-}
+  private async resolveEngine(): Promise<EngineName> {
+    if (this.engine) {
+      return this.engine;
+    }
+    if (!this.ready) {
+      this.ready = this.detectEngine();
+    }
+    this.engine = await this.ready;
+    return this.engine;
+  }
 
-  async transaction(callback: any) {
-    const connection =
-      await pool.getConnection();
+  private async detectEngine(): Promise<EngineName> {
+    if (environment.DB_ENGINE === 'sqlite') {
+      await sqliteEngine.init();
+      console.log('Database engine: SQLite');
+      return 'sqlite';
+    }
 
     try {
-      await connection.beginTransaction();
-
-      const result = await callback(
-        connection,
+      await mysqlPool.query('SELECT 1');
+      console.log('Database engine: MySQL');
+      return 'mysql';
+    } catch (error) {
+      console.warn(
+        'MySQL is not available. Using the local SQLite database instead.',
       );
+      await sqliteEngine.init();
+      console.log('Database engine: SQLite');
+      return 'sqlite';
+    }
+  }
 
+  async query<T = any>(sql: string, params: any[] = []): Promise<T> {
+    const engine = await this.resolveEngine();
+
+    if (engine === 'mysql') {
+      const [rows] = await mysqlPool.execute(sql, params);
+      return rows as T;
+    }
+
+    return sqliteEngine.query<T>(sql, params);
+  }
+
+  async transaction(callback: any) {
+    const engine = await this.resolveEngine();
+
+    if (engine === 'sqlite') {
+      return callback({
+        query: (sql: string, params: any[] = []) => this.query(sql, params),
+      });
+    }
+
+    const connection = await mysqlPool.getConnection();
+    try {
+      await connection.beginTransaction();
+      const result = await callback(connection);
       await connection.commit();
-
       return result;
     } catch (error) {
       await connection.rollback();
-
       throw error;
     } finally {
       connection.release();
@@ -39,4 +79,4 @@ class MySQL {
   }
 }
 
-export default new MySQL();
+export default new DatabaseFacade();

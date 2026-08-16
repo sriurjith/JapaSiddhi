@@ -23,19 +23,22 @@ const GlobalJapaCount: React.FC<Props> = ({
     <View style={styles.container}>
 
       <Text style={styles.title}>
-        🌍 Global Japa Count
+        Your Japa Count
       </Text>
 
 
       <Text style={styles.count}>
         {(
-          data?.totalCount ?? 0
+          data?.userCount ?? 0
         ).toLocaleString()}
       </Text>
 
 
       <Text style={styles.subtitle}>
-        Every chant by every devotee contributes to this divine count
+        Community total:{' '}
+        {(
+          data?.totalCount ?? 0
+        ).toLocaleString()}
       </Text>
 
 

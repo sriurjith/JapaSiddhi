@@ -8,18 +8,11 @@ export const fetchHomeData = createAsyncThunk<
   {
     rejectValue: string;
   }
->(
-  'home/fetchHomeData',
-  async (_, {rejectWithValue}) => {
-    try {
-      const response = await HomeApi.getHomeData();
-      return response;
-    } catch (error: any) {
-      return rejectWithValue(
-        error?.response?.data?.message ||
-          error?.message ||
-          'Unable to load Home data.',
-      );
-    }
-  },
-);
+>('home/fetchHomeData', async (_arg, {rejectWithValue}) => {
+  try {
+    return await HomeApi.getHomeData();
+  } catch (error: any) {
+    const message = error?.response?.data?.message || error?.message;
+    return rejectWithValue(message || 'Could not load home counts from the API.');
+  }
+});

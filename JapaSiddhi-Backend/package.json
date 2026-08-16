@@ -6,11 +6,12 @@
   "license": "MIT",
   "scripts": {
     "dev": "nodemon",
-    "build": "tsc",
+    "build": "tsc && node -e \"require('fs').mkdirSync('dist/database',{recursive:true}); require('fs').copyFileSync('src/database/schema.sqlite.sql','dist/database/schema.sqlite.sql')\"",
     "start": "node dist/server.js",
     "clean": "rimraf dist",
     "lint": "eslint . --ext .ts",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "db:reset": "node -e \"require('fs').rmSync('data/japa_siddhi.sqlite',{force:true}); console.log('SQLite database removed');\""
   },
   "dependencies": {
     "archiver": "^8.0.0",
@@ -31,9 +32,11 @@
     "morgan": "^1.10.0",
     "multer": "^2.0.2",
     "mysql2": "^3.14.3",
+    "nodemailer": "^9.0.5",
     "pdfkit": "^0.19.1",
     "pdfmake": "^0.3.11",
     "socket.io": "^4.8.3",
+    "sql.js": "^1.14.2",
     "uuid": "^13.0.0",
     "winston": "^3.17.0"
   },
@@ -46,8 +49,10 @@
     "@types/morgan": "^1.9.10",
     "@types/multer": "^2.2.0",
     "@types/node": "^24.13.3",
+    "@types/nodemailer": "^8.0.1",
     "@types/pdfkit": "^0.17.6",
     "@types/socket.io": "^3.0.2",
+    "@types/sql.js": "^1.4.11",
     "@typescript-eslint/eslint-plugin": "^8.41.0",
     "@typescript-eslint/parser": "^8.41.0",
     "eslint": "^9.34.0",

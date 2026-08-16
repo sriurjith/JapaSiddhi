@@ -20,6 +20,8 @@ import customerCareRoutes from './modules/customerCare/customerCare.routes';
 import feedbackRoutes from './modules/feedback/feedback.routes';
 import challengeRoutes from './modules/challenge/challenge.routes';
 import reportRoutes from './modules/report/report.routes';
+import mantraRoutes from './modules/mantra/mantra.routes';
+import database from './database/mysql';
 const app = express();
 
 
@@ -49,12 +51,25 @@ app.use(morgan('dev'));
 
 
 
-app.get('/', (_, res) => {
+app.get('/', async (_, res) => {
+  await database.query('SELECT 1');
   res.status(200).json({
     success: true,
     application: 'Japa Siddhi Backend',
     version: '1.0.0',
     status: 'Running',
+    database: database.getEngineName(),
+  });
+});
+
+app.get('/api/v1/health', async (_, res) => {
+  await database.query('SELECT 1');
+  res.status(200).json({
+    success: true,
+    message: 'API and database are healthy',
+    data: {
+      database: database.getEngineName(),
+    },
   });
 });
 
@@ -67,6 +82,10 @@ app.use(
 app.use(
   '/api/v1/home',
   homeRoutes,
+);
+app.use(
+  '/api/v1/mantras',
+  mantraRoutes,
 );
 app.use(
   '/api/v1/japa',
@@ -128,4 +147,13 @@ app.use(
   '/api/v1/reports',
   reportRoutes,
 );
+
+app.use((error: any, _req: any, res: any, _next: any) => {
+  const status = error?.statusCode || error?.status || 500;
+  res.status(status).json({
+    success: false,
+    message: error?.message || 'Internal server error',
+  });
+});
+
 export default app;

@@ -65,25 +65,28 @@ class HomeRepository {
 
 
 
-  async getGlobalJapaCount(): Promise<GlobalJapaCount> {
-
-    const rows =
-      await mysql.query<any[]>(
+  async getGlobalJapaCount(userId: number): Promise<GlobalJapaCount> {
+    const [globalRows, userRows] = await Promise.all([
+      mysql.query<any[]>(
         `
-        SELECT total_japa_count
-        FROM global_japa_counter
-        WHERE id = 1
+        SELECT COALESCE(SUM(session_count), 0) AS totalJapaCount
+        FROM japa_sessions
         `,
-      );
-
+      ),
+      mysql.query<any[]>(
+        `
+        SELECT COALESCE(SUM(session_count), 0) AS userJapaCount
+        FROM japa_sessions
+        WHERE user_id = ?
+        `,
+        [userId],
+      ),
+    ]);
 
     return {
-
-      totalJapaCount:
-        rows[0]?.total_japa_count ?? 0,
-
+      totalJapaCount: Number(globalRows[0]?.totalJapaCount ?? 0) || 0,
+      userJapaCount: Number(userRows[0]?.userJapaCount ?? 0) || 0,
     };
-
   }
 
 
@@ -138,9 +141,24 @@ class HomeRepository {
 
         j.target_count AS targetCount,
 
-        j.completed_count AS completedCount,
+        COALESCE((
+          SELECT SUM(js.session_count)
+          FROM japa_sessions js
+          WHERE js.japa_goal_id = j.id
+        ), 0) AS completedCount,
 
-        j.remaining_count AS remainingCount,
+        CASE
+          WHEN j.target_count - COALESCE((
+            SELECT SUM(js.session_count)
+            FROM japa_sessions js
+            WHERE js.japa_goal_id = j.id
+          ), 0) < 0 THEN 0
+          ELSE j.target_count - COALESCE((
+            SELECT SUM(js.session_count)
+            FROM japa_sessions js
+            WHERE js.japa_goal_id = j.id
+          ), 0)
+        END AS remainingCount,
 
         j.daily_target AS dailyTarget,
 
@@ -219,38 +237,32 @@ class HomeRepository {
   ): Promise<TodayJapaProgress> {
 
 
-    const rows =
-      await mysql.query<any[]>(
+    const [todayRows, projectRows] = await Promise.all([
+      mysql.query<any[]>(
+        `
+        SELECT COALESCE(SUM(session_count), 0) AS todayCount
+        FROM japa_sessions
+        WHERE user_id = ?
+        AND DATE(created_at) = CURDATE()
+        `,
+        [userId],
+      ),
+      mysql.query<any[]>(
         `
         SELECT
-
-        COALESCE(
-          SUM(session_count),
-          0
-        ) AS todayCount
-
-        FROM japa_sessions
-
+          COALESCE(SUM(CASE WHEN status = 'COMPLETED' THEN 1 ELSE 0 END), 0) AS completedProjects,
+          COALESCE(SUM(CASE WHEN status = 'ACTIVE' THEN 1 ELSE 0 END), 0) AS totalActiveProjects
+        FROM japa_goals
         WHERE user_id = ?
-
-        AND DATE(created_at)=CURDATE()
-
         `,
-        [
-          userId,
-        ],
-      );
-
+        [userId],
+      ),
+    ]);
 
     return {
-
-      todayCount:
-        rows[0]?.todayCount ?? 0,
-
-      completedProjects:0,
-
-      totalActiveProjects:0,
-
+      todayCount: Number(todayRows[0]?.todayCount ?? 0) || 0,
+      completedProjects: Number(projectRows[0]?.completedProjects ?? 0) || 0,
+      totalActiveProjects: Number(projectRows[0]?.totalActiveProjects ?? 0) || 0,
     };
 
   }

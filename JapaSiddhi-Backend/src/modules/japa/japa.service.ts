@@ -5,6 +5,8 @@ import {
 } from './japa.types';
 
 import japaRepository from './japa.repository';
+import japaGoalRepository from '../japaGoal/japaGoal.repository';
+import AppError from '../../utils/appError';
 
 class JapaService {
 
@@ -13,13 +15,29 @@ class JapaService {
     data: CreateJapaSessionRequest,
   ) {
 
+    let japaGoalId = data.japaGoalId;
+
+    if (japaGoalId) {
+      const ownedGoal = await japaGoalRepository.getGoalById(
+        japaGoalId,
+        userId,
+      );
+      if (!ownedGoal) {
+        throw new AppError('Japa goal not found for this user', 403);
+      }
+    } else {
+      japaGoalId = await japaGoalRepository.findOrCreateActiveGoal(
+        userId,
+        data.mantraId,
+      );
+    }
+
     const sessionId =
       await japaRepository.createSession({
 
         userId,
 
-        japaGoalId:
-          data.japaGoalId,
+        japaGoalId,
 
         mantraType:
           data.mantraType,
@@ -45,21 +63,20 @@ class JapaService {
       });
 
 
-    if (data.japaGoalId) {
-
+    if (japaGoalId) {
       await japaRepository.updateJapaGoalProgress(
-        data.japaGoalId,
+        japaGoalId,
         data.sessionCount,
+        userId,
       );
-
     }
 
 
     // Updates database and emits Socket.IO event
-    const globalCount =
-      await japaRepository.updateGlobalJapaCount(
-        data.sessionCount,
-      );
+    const [globalCount, userTotal] = await Promise.all([
+      japaRepository.updateGlobalJapaCount(data.sessionCount),
+      japaRepository.getUserTotalJapa(userId),
+    ]);
 
 
     return {
@@ -70,6 +87,8 @@ class JapaService {
         data.sessionCount,
 
       globalCount,
+
+      userTotal,
 
     };
 
@@ -136,27 +155,26 @@ class JapaService {
     userId: number,
   ): Promise<JapaSummary> {
 
-    const totalJapaCount =
-      await japaRepository.getUserTotalJapa(
-        userId,
-      );
-
-    const todayJapaCount =
-      await japaRepository.getTodayJapa(
-        userId,
-      );
-
-    const globalJapaCount =
-      await japaRepository.getGlobalJapaCount();
+    const [
+      totalJapaCount,
+      todayJapaCount,
+      weeklyJapaCount,
+      monthlyJapaCount,
+      globalJapaCount,
+    ] = await Promise.all([
+      japaRepository.getUserTotalJapa(userId),
+      japaRepository.getTodayJapa(userId),
+      japaRepository.getWeekJapa(userId),
+      japaRepository.getMonthJapa(userId),
+      japaRepository.getGlobalJapaCount(),
+    ]);
 
     return {
-
       totalJapaCount,
-
       todayJapaCount,
-
+      weeklyJapaCount,
+      monthlyJapaCount,
       globalJapaCount,
-
     };
 
   }

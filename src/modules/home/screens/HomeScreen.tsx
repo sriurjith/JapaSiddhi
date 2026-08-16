@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React from 'react';
 import {
   ActivityIndicator,
   RefreshControl,
@@ -6,9 +6,15 @@ import {
   StyleSheet,
   View,
   Text,
+  TouchableOpacity,
 } from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 
+import {useFocusEffect, useNavigation} from '@react-navigation/native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {useDispatch, useSelector} from 'react-redux';
+
+import {RootStackParamList} from '../../../navigation/AppNavigator';
 
 import HomeBanner from '../components/HomeBanner';
 import GlobalJapaCount from '../components/GlobalJapaCount';
@@ -17,28 +23,37 @@ import QuickActionsGrid from '../components/QuickActionsGrid';
 import {fetchHomeData} from '../redux/homeThunk';
 
 import Colors from '../../../theme/colors';
+import ApiErrorPanel from '../../common/ApiErrorPanel';
 
 import {AppDispatch, RootState} from '../../../redux/store';
 
+const ACTION_ROUTES: Record<string, keyof RootStackParamList> = {
+  CHANT: 'Chant',
+  FAMILY_JAPA: 'FamilyJapa',
+  DONATE: 'Donate',
+  FESTIVALS: 'Festivals',
+  JAPA_GOALS: 'Progress',
+  PROFILE: 'Profile',
+  BAANALINGAM: 'BanaLingam',
+  NITHYA_HOMAM: 'NithyaHomam',
+  ORDERS: 'Orders',
+  CUSTOMER_CARE: 'CustomerCare',
+};
+
 const HomeScreen = () => {
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const dispatch = useDispatch<AppDispatch>();
 
   const {homeData, loading, error} = useSelector(
     (state: RootState) => state.home,
   );
 
-  useEffect(() => {
-    dispatch(fetchHomeData())
-      .unwrap()
-      .then(data => {
-        console.log('✅ HOME API SUCCESS');
-        console.log(data);
-      })
-      .catch(err => {
-        console.log('❌ HOME API ERROR');
-        console.log(err);
-      });
-  }, [dispatch]);
+  useFocusEffect(
+    React.useCallback(() => {
+      dispatch(fetchHomeData());
+    }, [dispatch]),
+  );
 
   console.log('Home Data:', homeData);
   console.log('Loading:', loading);
@@ -48,8 +63,10 @@ const HomeScreen = () => {
     dispatch(fetchHomeData());
   };
 
-  const handleNavigation = (route: string) => {
-    console.log(route);
+  const openPage = (action?: string) => {
+    const screen = ACTION_ROUTES[String(action || '').toUpperCase()] ?? 'Chant';
+    console.log('Opening page:', action, '->', screen);
+    navigation.navigate(screen);
   };
 
   if (loading) {
@@ -67,26 +84,18 @@ const HomeScreen = () => {
     );
   }
 
-  if (error) {
+  if (error && !homeData) {
     return (
-      <View style={styles.loaderContainer}>
-        <Text
-          style={{
-            color: 'red',
-            fontSize: 16,
-            marginBottom: 10,
-          }}>
-          API Error
-        </Text>
-
-        <Text
-          style={{
-            textAlign: 'center',
-            marginHorizontal: 20,
-          }}>
-          {error}
-        </Text>
-      </View>
+      <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+        <View style={styles.errorContent}>
+          <Text style={styles.pageTitle}>Home</Text>
+          <ApiErrorPanel
+            error={error}
+            rawError={error}
+            onRetry={() => dispatch(fetchHomeData())}
+          />
+        </View>
+      </SafeAreaView>
     );
   }
 
@@ -99,21 +108,27 @@ const HomeScreen = () => {
   }
 
   return (
-    <ScrollView
-      style={styles.container}
-      showsVerticalScrollIndicator={false}
-      refreshControl={
-        <RefreshControl
-          refreshing={loading}
-          onRefresh={onRefresh}
-          colors={[Colors.primary]}
-          tintColor={Colors.primary}
-        />
-      }>
-      <View style={styles.content}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={loading}
+            onRefresh={onRefresh}
+            colors={[Colors.primary]}
+            tintColor={Colors.primary}
+          />
+        }>
+        <TouchableOpacity
+          style={styles.profileLink}
+          onPress={() => navigation.navigate('Profile')}>
+          <Text style={styles.profileLinkText}>Profile Menu</Text>
+        </TouchableOpacity>
         <HomeBanner
           banner={homeData.banner}
-          onPress={() => {}}
+          onPress={() => openPage(homeData.banner.buttonAction || 'CHANT')}
         />
 
         <GlobalJapaCount
@@ -122,10 +137,10 @@ const HomeScreen = () => {
 
         <QuickActionsGrid
           actions={homeData.quickActions}
-          onPress={handleNavigation}
+          onPress={openPage}
         />
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
@@ -137,9 +152,13 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
 
+  scroll: {
+    flex: 1,
+  },
+
   content: {
     padding: 16,
-    paddingBottom: 30,
+    paddingBottom: 80,
   },
 
   loaderContainer: {
@@ -153,5 +172,27 @@ const styles = StyleSheet.create({
     marginTop: 20,
     fontSize: 16,
     color: Colors.primary,
+  },
+
+  errorContent: {
+    padding: 16,
+  },
+  pageTitle: {
+    fontSize: 28,
+    lineHeight: 36,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    marginBottom: 16,
+  },
+
+  profileLink: {
+    alignSelf: 'flex-end',
+    marginBottom: 8,
+  },
+
+  profileLinkText: {
+    color: Colors.primary,
+    fontWeight: '700',
+    fontSize: 16,
   },
 });

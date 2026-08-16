@@ -22,12 +22,10 @@ const authenticate = (
 
 
     if (!authHeader) {
-
       throw new AppError(
         'Authorization token missing.',
         401,
       );
-
     }
 
 
@@ -70,8 +68,9 @@ const authenticate = (
     }
 
 
-    req.user = decoded as any;
-
+    const user = decoded as any;
+    user.id = Number(user.id);
+    req.user = user;
 
     next();
 

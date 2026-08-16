@@ -7,12 +7,19 @@ export interface FirebaseLoginRequest {
 export interface CompleteProfileRequest {
   fullName: string;
   email?: string;
-  gender: 'Male' | 'Female' | 'Other';
+  gender: 'Male' | 'Female' | 'Other' | 'Prefer Not To Say';
   dateOfBirth: string;
 
   countryId: number;
   stateId?: number | null;
   cityId?: number | null;
+  address?: string;
+  maritalStatus?: 'Bachelor' | 'Married';
+  spouseName?: string;
+  spouseDob?: string;
+  anniversaryDate?: string;
+  gothram?: string;
+  nakshatram?: string;
   preferredLanguageId: number;
 
   timezone?: string;
@@ -59,6 +66,13 @@ export interface AuthUser {
   countryId: number | null;
   stateId: number | null;
   cityId: number | null;
+  address: string | null;
+  maritalStatus: string | null;
+  spouseName: string | null;
+  spouseDob: string | null;
+  anniversaryDate: string | null;
+  gothram: string | null;
+  nakshatram: string | null;
 
   preferredLanguageId: number | null;
 

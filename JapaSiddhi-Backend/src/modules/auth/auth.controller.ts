@@ -52,6 +52,94 @@ class AuthController {
 
 
 
+  async register(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
+    try {
+      const result = await authService.register(req.body);
+      return apiResponse.success(res, 'Registration successful', result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async signIn(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
+    try {
+      const result = await authService.signIn(req.body);
+      return apiResponse.success(res, 'Login successful', result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async phoneLogin(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
+    try {
+      const result = await authService.phoneLogin(req.body);
+      return apiResponse.success(
+        res,
+        result.isNewUser
+          ? 'Registration successful'
+          : 'Login successful',
+        result,
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async devLogin(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
+    try {
+      const result = await authService.devLogin();
+      return apiResponse.success(
+        res,
+        'Development login successful',
+        result,
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async sendOtp(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
+    try {
+      const result = await authService.sendOtp(req.body);
+      return apiResponse.success(res, 'OTP sent successfully', result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async verifyOtp(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
+    try {
+      const result = await authService.verifyOtp(req.body);
+      return apiResponse.success(res, 'OTP verified successfully', result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async completeProfile(
     req: Request,
     res: Response,
@@ -62,7 +150,7 @@ class AuthController {
 
 
       const userId =
-        req.user?.id;
+        (req as Request & {user?: {id: number}}).user?.id;
 
 
       if (!userId) {
@@ -109,7 +197,7 @@ class AuthController {
 
 
       const userId =
-        req.user?.id;
+        (req as Request & {user?: {id: number}}).user?.id;
 
 
 
@@ -143,6 +231,25 @@ class AuthController {
 
     }
 
+  }
+
+  async deleteAccount(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
+    try {
+      const userId = (req as Request & {user?: {id: number}}).user?.id;
+
+      if (!userId) {
+        throw new Error('Unauthorized user');
+      }
+
+      await authService.deleteAccount(userId);
+      return apiResponse.success(res, 'Account deleted successfully');
+    } catch (error) {
+      next(error);
+    }
   }
 
 }

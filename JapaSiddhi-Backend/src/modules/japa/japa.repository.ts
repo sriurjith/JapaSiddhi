@@ -69,152 +69,128 @@ class JapaRepository {
   }
 
 
+  private toCount(value: unknown): number {
+    return Number(value ?? 0) || 0;
+  }
+
   async updateJapaGoalProgress(
     goalId: number,
-    count: number,
+    _count: number,
+    userId: number,
   ): Promise<void> {
+    const rows = await mysql.query<any[]>(
+      `
+      SELECT COALESCE(SUM(session_count), 0) AS total
+      FROM japa_sessions
+      WHERE japa_goal_id = ?
+      AND user_id = ?
+      `,
+      [goalId, userId],
+    );
+    const completed = this.toCount(rows[0]?.total);
 
     await mysql.query(
       `
       UPDATE japa_goals
       SET
-        completed_count =
-          completed_count + ?,
-
+        completed_count = ?,
         remaining_count =
           CASE
-            WHEN remaining_count - ? < 0
-            THEN 0
-            ELSE remaining_count - ?
+            WHEN target_count - ? < 0 THEN 0
+            ELSE target_count - ?
           END
-
       WHERE id = ?
+      AND user_id = ?
       `,
-      [
-        count,
-        count,
-        count,
-        goalId,
-      ],
+      [completed, completed, completed, goalId, userId],
     );
-
   }
 
+  async getExactGlobalJapaCount(): Promise<number> {
+    const rows = await mysql.query<any[]>(
+      `
+      SELECT COALESCE(SUM(session_count), 0) AS totalJapaCount
+      FROM japa_sessions
+      `,
+    );
+    return this.toCount(rows[0]?.totalJapaCount);
+  }
 
   async updateGlobalJapaCount(
-    count: number,
+    _count: number,
   ): Promise<number> {
+    const totalCount = await this.getExactGlobalJapaCount();
 
     await mysql.query(
       `
       UPDATE global_japa_counter
-      SET
-        total_japa_count =
-          total_japa_count + ?
-
+      SET total_japa_count = ?
       WHERE id = 1
       `,
-      [
-        count,
-      ],
+      [totalCount],
     );
 
-    const rows =
-      await mysql.query<any[]>(
-        `
-        SELECT
-          total_japa_count
-
-        FROM global_japa_counter
-
-        WHERE id = 1
-        `,
-      );
-
-    const totalCount =
-      rows[0]?.total_japa_count ?? 0;
-
-    socketEmitter.emitGlobalCount(
-      totalCount,
-    );
-
+    socketEmitter.emitGlobalCount(totalCount);
     return totalCount;
-
   }
 
-
-  async getUserTotalJapa(
-    userId: number,
-  ) {
-
-    const rows =
-      await mysql.query<any[]>(
-        `
-        SELECT
-          COALESCE(
-            SUM(session_count),
-            0
-          ) AS totalJapaCount
-
-        FROM japa_sessions
-
-        WHERE user_id = ?
-        `,
-        [
-          userId,
-        ],
-      );
-
-    return rows[0]?.totalJapaCount ?? 0;
-
+  async getUserTotalJapa(userId: number) {
+    const rows = await mysql.query<any[]>(
+      `
+      SELECT COALESCE(SUM(session_count), 0) AS totalJapaCount
+      FROM japa_sessions
+      WHERE user_id = ?
+      `,
+      [userId],
+    );
+    return this.toCount(rows[0]?.totalJapaCount);
   }
 
-
-  async getTodayJapa(
-    userId: number,
-  ) {
-
-    const rows =
-      await mysql.query<any[]>(
-        `
-        SELECT
-          COALESCE(
-            SUM(session_count),
-            0
-          ) AS todayJapaCount
-
-        FROM japa_sessions
-
-        WHERE user_id = ?
-
-        AND DATE(created_at) = CURDATE()
-        `,
-        [
-          userId,
-        ],
-      );
-
-    return rows[0]?.todayJapaCount ?? 0;
-
+  async getRangeJapa(userId: number, fromSql: string) {
+    const rows = await mysql.query<any[]>(
+      `
+      SELECT COALESCE(SUM(session_count), 0) AS total
+      FROM japa_sessions
+      WHERE user_id = ?
+      AND DATE(created_at) >= ${fromSql}
+      `,
+      [userId],
+    );
+    return this.toCount(rows[0]?.total);
   }
 
+  async getTodayJapa(userId: number) {
+    const rows = await mysql.query<any[]>(
+      `
+      SELECT COALESCE(SUM(session_count), 0) AS todayJapaCount
+      FROM japa_sessions
+      WHERE user_id = ?
+      AND DATE(created_at) = CURDATE()
+      `,
+      [userId],
+    );
+    return this.toCount(rows[0]?.todayJapaCount);
+  }
+
+  async getWeekJapa(userId: number) {
+    return this.getRangeJapa(userId, "DATE('now', '-6 days')");
+  }
+
+  async getMonthJapa(userId: number) {
+    const rows = await mysql.query<any[]>(
+      `
+      SELECT COALESCE(SUM(session_count), 0) AS total
+      FROM japa_sessions
+      WHERE user_id = ?
+      AND strftime('%Y-%m', created_at) = strftime('%Y-%m', 'now')
+      `,
+      [userId],
+    );
+    return this.toCount(rows[0]?.total);
+  }
 
   async getGlobalJapaCount() {
-
-    const rows =
-      await mysql.query<any[]>(
-        `
-        SELECT
-          total_japa_count
-
-        FROM global_japa_counter
-
-        WHERE id = 1
-        `,
-      );
-
-    return rows[0]?.total_japa_count ?? 0;
-
+    return this.getExactGlobalJapaCount();
   }
 
 }

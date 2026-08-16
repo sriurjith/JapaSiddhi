@@ -16,7 +16,7 @@ class MasterRepository {
 
         name,
 
-        iso_code AS isoCode,
+        iso2 AS isoCode,
 
         phone_code AS phoneCode
 
@@ -105,9 +105,9 @@ class MasterRepository {
 
         id,
 
-        language_code AS code,
+        code,
 
-        language_name AS name,
+        name,
 
         native_name AS nativeName,
 
@@ -117,7 +117,7 @@ class MasterRepository {
 
       WHERE is_active = 1
 
-      ORDER BY language_name ASC
+      ORDER BY display_order ASC, name ASC
       `,
     );
 

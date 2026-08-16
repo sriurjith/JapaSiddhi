@@ -2,7 +2,9 @@ export interface CreateDonationRequest {
 
   donationType:
     | 'MONTHLY'
-    | 'GENERAL';
+    | 'GENERAL'
+    | 'ANNADANAM'
+    | 'NITHYA_HOMAM';
 
   amount: number;
 
@@ -31,7 +33,9 @@ export interface DonationResponse {
 
   donationType:
     | 'MONTHLY'
-    | 'GENERAL';
+    | 'GENERAL'
+    | 'ANNADANAM'
+    | 'NITHYA_HOMAM';
 
   amount: number;
 

@@ -28,6 +28,6 @@ export interface AuthState {
   jwtToken: string | null;
   phoneNumber: string;
   confirmation: FirebaseAuthTypes.ConfirmationResult | null;
-  user: FirebaseAuthTypes.User | null;
+  user: any;
   error: string | null;
 }

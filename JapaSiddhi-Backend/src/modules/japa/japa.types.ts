@@ -101,6 +101,10 @@ export interface JapaSummary {
 
   todayJapaCount: number;
 
+  weeklyJapaCount: number;
+
+  monthlyJapaCount: number;
+
   globalJapaCount: number;
 
 }

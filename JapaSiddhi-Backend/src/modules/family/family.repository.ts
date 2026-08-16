@@ -313,10 +313,7 @@ class FamilyRepository {
 
         u.profile_image AS profileImage,
 
-        COALESCE(
-          SUM(js.session_count),
-          0
-        ) AS totalJapaCount
+        COALESCE(SUM(js.session_count), 0) AS totalJapaCount
 
       FROM family_members fm
 
@@ -371,7 +368,7 @@ class FamilyRepository {
       );
 
 
-    return rows[0]?.todayJapaCount ?? 0;
+    return Number(rows[0]?.todayJapaCount ?? 0) || 0;
 
   }
 

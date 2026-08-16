@@ -1,12 +1,14 @@
-const IS_PRODUCTION = false;
+const IS_PRODUCTION = !__DEV__;
 
-const DEV_API_URL = 'http://10.0.2.2:5000/api/v1';
-const PROD_API_URL = 'https://api.japasiddhi.com/api';
+const DEV_API_URL = 'http://127.0.0.1:5000/api/v1';
+const PROD_API_URL = 'https://api.japasiddhi.com/api/v1';
 
 const ENV = {
   APP_NAME: 'Japa Siddhi',
 
   VERSION: '1.0.0',
+
+  IS_PRODUCTION,
 
   API_URL: IS_PRODUCTION ? PROD_API_URL : DEV_API_URL,
 
@@ -18,7 +20,7 @@ const ENV = {
 
   APPLE_PAY_KEY: '',
 
-  PLAYSTORE_URL: '',
+  PLAYSTORE_URL: 'https://play.google.com/store/apps/details?id=com.japasiddhi',
 
   APPSTORE_URL: '',
 
@@ -26,7 +28,9 @@ const ENV = {
 
   SUPPORT_PHONE: '',
 
-  WEBSITE: '',
+  WEBSITE: 'https://japasiddhi.com',
+
+  PRIVACY_POLICY_URL: 'https://japasiddhi.com/privacy',
 
   DEFAULT_LANGUAGE: 'en',
 
